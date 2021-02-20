@@ -4,8 +4,7 @@
     <projectFile>IHeardYouLikeBlocks/IHeardYouLikeBlocks.csproj</projectFile>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="e0d3c5d7-8b0e-44cc-bedb-a6e79f1b32b9" name="Default Changelist" comment="initial commit">
-      <change beforePath="$PROJECT_DIR$/.idea/.idea.IHeardYouLikeBlocks/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.IHeardYouLikeBlocks/.idea/workspace.xml" afterDir="false" />
+    <list default="true" id="e0d3c5d7-8b0e-44cc-bedb-a6e79f1b32b9" name="Default Changelist" comment="my first attempt at a simpleblock cipher, which failed :(">
       <change beforePath="$PROJECT_DIR$/IHeardYouLikeBlocks/Program.cs" beforeDir="false" afterPath="$PROJECT_DIR$/IHeardYouLikeBlocks/Program.cs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -69,7 +68,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1613790832368</updated>
-      <workItem from="1613790837152" duration="9041000" />
+      <workItem from="1613790837152" duration="9343000" />
     </task>
     <task id="LOCAL-00001" summary="initial commit">
       <created>1613790866253</created>
@@ -78,7 +77,14 @@
       <option name="project" value="LOCAL" />
       <updated>1613790866253</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="my first attempt at a simpleblock cipher, which failed :(">
+      <created>1613799969691</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1613799969691</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -100,6 +106,7 @@
   <component name="VcsManagerConfiguration">
     <option name="CLEAR_INITIAL_COMMIT_MESSAGE" value="true" />
     <MESSAGE value="initial commit" />
-    <option name="LAST_COMMIT_MESSAGE" value="initial commit" />
+    <MESSAGE value="my first attempt at a simpleblock cipher, which failed :(" />
+    <option name="LAST_COMMIT_MESSAGE" value="my first attempt at a simpleblock cipher, which failed :(" />
   </component>
 </project>

@@ -8,6 +8,7 @@ namespace IHeardYouLikeBlocks
 {
     class Program
     {
+        // i had to write this by hand. i am very sad.
         private static Dictionary<(int, int), int[]> sBox = new Dictionary<(int, int), int[]>
         {
             {(GetHashCode(new[]{0, 0, 0, 0}), GetHashCode(new[]{0, 0})), new[]{1, 0}},
