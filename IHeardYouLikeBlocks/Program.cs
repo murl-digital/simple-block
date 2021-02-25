@@ -81,11 +81,11 @@ namespace IHeardYouLikeBlocks
         {
             var encryptedString = Crypt("testing!");
             Console.WriteLine(encryptedString);
-            var decryptedString = Crypt(encryptedString);
+            var decryptedString = Crypt(encryptedString, true);
             Console.WriteLine(decryptedString);
         }
 
-        private static string Crypt(string input)
+        private static string Crypt(string input, bool decrypt = false)
         {
             // this part is basically converting the input into binary, and spitting it into 4 bit chunks
             var inArray = ToBinary(ConvertToByteArray(input, Encoding.ASCII));
@@ -104,7 +104,7 @@ namespace IHeardYouLikeBlocks
                 1,
                 1,
                 0
-            });
+            }, decrypt);
 
             // after the message gets block'd, the string is reconstructed here
             var strings = new List<string>();
@@ -120,12 +120,14 @@ namespace IHeardYouLikeBlocks
         // unfortunately, my first attempt at the block is broken, and im not sure why.
         // my best guess is because i did the s-box wrong (if you want feel free to double check starting at line 11, but i wouldn't)
         // failing that, perhaps im doing the subsitution wrong, but ill address that later.
-        static int[][] SBlock(int[][] input, int[] key)
+        static int[][] SBlock(int[][] input, int[] key, bool decrypt)
         {
             var result = new List<int[]>();
             foreach (var i in input)
             {
-                result.Add(Muddle(i, key));   
+                var chunkKey = new int[4];
+                Array.Copy(key, chunkKey, 4);
+                result.Add(decrypt ? UnMuddle(i, chunkKey) : Muddle(i, chunkKey));   
             }
 
             return result.ToArray();
@@ -139,7 +141,30 @@ namespace IHeardYouLikeBlocks
             {
                 Sub(key, buffer);
 
-                LeftShiftArray(key, 1);
+                RotateLeft(key, 1);
+                var swapBuffer = new int[4];
+                Array.Copy(buffer, swapBuffer, 4);
+                buffer[0] = swapBuffer[2];
+                buffer[1] = swapBuffer[3];
+                buffer[2] = swapBuffer[0];
+                buffer[3] = swapBuffer[1];
+            }
+            
+            Sub(key, buffer);
+
+            return buffer;
+        }
+        
+        private static int[] UnMuddle(int[] chunk, int[] key)
+        {
+            var buffer = new int[4];
+            Array.Copy(chunk, buffer, 4);
+            RotateLeft(key, 2);
+            for (var i = 0; i < 2; i++)
+            {
+                Sub(key, buffer);
+
+                RotateRight(key, 1);
                 var swapBuffer = new int[4];
                 Array.Copy(buffer, swapBuffer, 4);
                 buffer[0] = swapBuffer[2];
@@ -155,27 +180,45 @@ namespace IHeardYouLikeBlocks
 
         private static void Sub(int[] key, int[] buffer)
         {
-            Console.WriteLine(string.Concat(key));
             var sub = sBox[(GetHashCode(key), GetHashCode(new []{buffer[2], buffer[3]}))];
             buffer[0] = buffer[0] ^ sub[0];
             buffer[1] = buffer[1] ^ sub[1];
         }
 
-        public static void LeftShiftArray<T>(T[] arr, int shift)
+        private static void RotateLeft(int[] array, int count)
         {
-            shift = shift % arr.Length;
-            T[] buffer = new T[shift];
-            Array.Copy(arr, buffer, shift);
-            Array.Copy(arr, shift, arr, 0, arr.Length - shift);
-            Array.Copy(buffer, 0, arr, arr.Length - shift, shift);
+            for (int i = 0; i < count; i++)
+            {
+                var buffer = new int[3];
+                Array.Copy(array, 1, buffer, 0, 3);
+                array[3] = array[0];
+
+                array[0] = buffer[0];
+                array[1] = buffer[1];
+                array[2] = buffer[2];
+            }
         }
 
-        public static byte[] ConvertToByteArray(string str, Encoding encoding)
+        private static void RotateRight(int[] array, int count)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                var buffer = new int[3];
+                Array.Copy(array, 0, buffer, 0, 3);
+                array[0] = array[3];
+
+                array[1] = buffer[0];
+                array[2] = buffer[1];
+                array[3] = buffer[2];
+            }
+        }
+
+        private static byte[] ConvertToByteArray(string str, Encoding encoding)
         {
             return encoding.GetBytes(str);
         }
 
-        public static int[] ToBinary(Byte[] data)
+        private static int[] ToBinary(Byte[] data)
         {
             var bits = data.Select(byt => Convert.ToString(byt, 2).PadLeft(8, '0'));
 
@@ -183,14 +226,14 @@ namespace IHeardYouLikeBlocks
                 .SelectMany(bit => bit.ToCharArray(), (_, c) => int.Parse(c.ToString())).ToArray();
         }
         
-        static int GetHashCode(int[] values)
+        private static int GetHashCode(int[] values)
         {
-            int result = 0;
-            int shift = 0;
-            for (int i = 0; i < values.Length; i++)
+            var result = 0;
+            var shift = 0;
+            foreach (var t in values)
             {
                 shift = (shift + 11) % 21;
-                result ^= (values[i]+1024) << shift;
+                result ^= (t+1024) << shift;
             }
             return result;
         }
