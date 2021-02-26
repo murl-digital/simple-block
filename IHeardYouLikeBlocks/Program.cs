@@ -76,16 +76,31 @@ namespace IHeardYouLikeBlocks
             {(GetHashCode(new[]{1, 1, 1, 1}), GetHashCode(new[]{1, 0})), new[]{1, 0}},
             {(GetHashCode(new[]{1, 1, 1, 1}), GetHashCode(new[]{1, 1})), new[]{1, 1}},
         };
+
+        public delegate int[][] Encryptor(int[][] input, int[] key, bool decrypt);
         
         static void Main(string[] args)
         {
-            var encryptedString = Crypt("testing!");
+            var key = new[]
+            {
+                1,
+                1,
+                1,
+                0
+            };
+            
+            var encryptedString = Crypt("testing!", key, SBlock);
             Console.WriteLine(encryptedString);
-            var decryptedString = Crypt(encryptedString, true);
+            var decryptedString = Crypt(encryptedString, key, SBlock, true);
             Console.WriteLine(decryptedString);
+
+            var cbcEncryptedString = Crypt("testing!", key, SBlockCBC);
+            Console.WriteLine(cbcEncryptedString);
+            var cbcDecryptedString = Crypt(cbcEncryptedString, key, SBlockCBC, true);
+            Console.WriteLine(cbcDecryptedString);
         }
 
-        private static string Crypt(string input, bool decrypt = false)
+        private static string Crypt(string input, int[] key, Encryptor encryptor, bool decrypt = false)
         {
             // this part is basically converting the input into binary, and spitting it into 4 bit chunks
             var inArray = ToBinary(ConvertToByteArray(input, Encoding.ASCII));
@@ -98,13 +113,7 @@ namespace IHeardYouLikeBlocks
                 .GroupBy(x => x.index / 4)
                 .Select(x => x.Select(y => y.item).ToArray()).ToArray();
 
-            var encrypted = SBlock(split, new[]
-            {
-                1,
-                1,
-                1,
-                0
-            }, decrypt);
+            var encrypted = encryptor(split, key, decrypt);
 
             // after the message gets block'd, the string is reconstructed here
             var strings = new List<string>();
@@ -120,7 +129,7 @@ namespace IHeardYouLikeBlocks
         // unfortunately, my first attempt at the block is broken, and im not sure why.
         // my best guess is because i did the s-box wrong (if you want feel free to double check starting at line 11, but i wouldn't)
         // failing that, perhaps im doing the subsitution wrong, but ill address that later.
-        static int[][] SBlock(int[][] input, int[] key, bool decrypt)
+        private static int[][] SBlock(int[][] input, int[] key, bool decrypt)
         {
             var result = new List<int[]>();
             foreach (var i in input)
@@ -128,6 +137,74 @@ namespace IHeardYouLikeBlocks
                 var chunkKey = new int[4];
                 Array.Copy(key, chunkKey, 4);
                 result.Add(decrypt ? UnMuddle(i, chunkKey) : Muddle(i, chunkKey));   
+            }
+
+            return result.ToArray();
+        }
+        
+        private static int[][] SBlockCBC(int[][] input, int[] key, bool decrypt)
+        {
+            var result = new List<int[]>();
+            var random = new Random(GetHashCode(key));
+            var xor = new int[4];
+            for (var i = 0; i < xor.Length; i++)
+            {
+                xor[i] = random.Next(0, 2);
+            }
+
+            if (decrypt)
+            {
+                /*for (int i = input.Length - 1; i >= 0; i--)
+                {
+                    var chunkKey = new int[4];
+                    Array.Copy(key, chunkKey, 4);
+                    if (i == 0)
+                    {
+                        for (var j = 0; j < xor.Length; j++)
+                        {
+                            xor[j] = random.Next(0, 2);
+                        }
+                    }
+                    else
+                    {
+                        Array.Copy(input[i-1], xor, 4);
+                    }
+
+                    var chunk = UnMuddle(input[i], chunkKey);
+                    for (int j = 0; j < chunk.Length; j++)
+                    {
+                        chunk[j] = chunk[j] ^ xor[j];
+                    }
+                    result.Insert(0, chunk);
+                }*/
+                foreach (var i in input)
+                {
+                    var chunkKey = new int[4];
+                    Array.Copy(key, chunkKey, 4);
+                    var chunk = UnMuddle(i, chunkKey);
+                    for (int j = 0; j < i.Length; j++)
+                    {
+                        chunk[j] = chunk[j] ^ xor[j];
+                    }
+                    result.Add(chunk);
+                    Array.Copy(i, xor, 4);
+                }
+            }
+            else
+            {
+                foreach (var i in input)
+                {
+                    var chunkKey = new int[4];
+                    Array.Copy(key, chunkKey, 4);
+                    for (int j = 0; j < i.Length; j++)
+                    {
+                        i[j] = i[j] ^ xor[j];
+                    }
+
+                    var chunk = Muddle(i, chunkKey);
+                    result.Add(chunk);
+                    Array.Copy(chunk, xor, 4);
+                }
             }
 
             return result.ToArray();
